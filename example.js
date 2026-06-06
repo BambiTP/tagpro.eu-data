@@ -1,5 +1,5 @@
 const decoder = require('./decoder.js');
-
+const zomball = require('./zomball.js');
 const options = {
     gameinfo: true,
     map: true,
@@ -25,7 +25,11 @@ for (const match of decoder.decodeMatchFiles(['./match1.json','./match2.json'], 
 for(const match of decoder.decodeBulkMatches('./bulkmatches.json', './bulkmaps.json', options, ['1', '2'])){
     console.log(match.map.name)
 }
-
+//zomball.js example
+for (const match of decoder.decodeMatchFiles(['./zomballTest.json'], options)) {
+    let zomballMatch = zomball.processZomballMatch(match)
+    console.dir(zomballMatch, { depth: null })
+}
 //helpful timeline function pass match.player into it
 //converts match.player[n].events into a timeline
 
@@ -84,5 +88,4 @@ function toTimeline(player) {
 
     return timeline;
 }
-
 
