@@ -12,24 +12,39 @@ const options = {
 
 //see tagpro.eu/?science to see what data is available or ask bambi
 
+
+
 // Bulk files from tagpro.eu
 for (const match of decoder.decodeBulkMatches('./bulkmatches.json', './bulkmaps.json', options, 'all')) {
     console.log(match.teams[1].name)
 }
+
+
+
 // Individual match files
 for (const match of decoder.decodeMatchFiles(['./match1.json','./match2.json'], options)) {
     console.log(match.players[0].name)
 }
 
+
+
 // Specific bulk matches by id decodeBulkMatches( bulkMatchFile, bulkMapFile, options, array of id's or all )
 for(const match of decoder.decodeBulkMatches('./bulkmatches.json', './bulkmaps.json', options, ['1', '2'])){
     console.log(match.map.name)
 }
+
+
+
 //zomball.js example
+const fs = require('fs');
+
 for (const match of decoder.decodeMatchFiles(['./zomballTest.json'], options)) {
-    let zomballMatch = zomball.processZomballMatch(match)
-    console.dir(zomballMatch, { depth: null })
+    console.log(zomball.processZomballMatch(match))
 }
+
+
+
+
 //helpful timeline function pass match.player into it
 //converts match.player[n].events into a timeline
 
