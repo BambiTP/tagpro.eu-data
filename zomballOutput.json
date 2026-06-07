@@ -1,0 +1,514 @@
+[
+  {
+    "multipleStartingZombies": false,
+    "startingZombieCount": 1,
+    "timeline": [
+      {
+        "time": 0,
+        "timeString": "0:00.00",
+        "zombieCount": 1,
+        "survivorCount": 4,
+        "type": "match_start"
+      },
+      {
+        "time": 4266,
+        "timeString": "1:11.10",
+        "player": "EvTheSmev",
+        "type": "valid_pop",
+        "team": 1,
+        "teamName": "survivor",
+        "taggedBy": "Some Ball 5",
+        "zombieCount": 1,
+        "survivorCount": 4
+      },
+      {
+        "time": 4266,
+        "timeString": "1:11.10",
+        "player": "Some Ball 5",
+        "type": "tag",
+        "tagsCount": 1,
+        "team": 2,
+        "teamName": "zombie",
+        "zombieCount": 1,
+        "survivorCount": 4,
+        "playerTagged": "EvTheSmev",
+        "validTag": true
+      },
+      {
+        "time": 4427,
+        "timeString": "1:13.78",
+        "player": "EvTheSmev",
+        "type": "invalid_pop",
+        "team": 1,
+        "teamName": "survivor",
+        "taggedBy": "map",
+        "zombieCount": 1,
+        "survivorCount": 4
+      },
+      {
+        "time": 4427,
+        "timeString": "1:13.78",
+        "player": "Some Ball 5",
+        "type": "tag",
+        "tagsCount": 1,
+        "team": 2,
+        "teamName": "zombie",
+        "zombieCount": 1,
+        "survivorCount": 4,
+        "playerTagged": "EvTheSmev",
+        "validTag": false
+      },
+      {
+        "time": 4592,
+        "timeString": "1:16.53",
+        "player": "EvTheSmev",
+        "type": "invalid_pop",
+        "team": 1,
+        "teamName": "survivor",
+        "taggedBy": "map",
+        "zombieCount": 1,
+        "survivorCount": 4
+      },
+      {
+        "time": 4592,
+        "timeString": "1:16.53",
+        "player": "Some Ball 5",
+        "type": "tag",
+        "tagsCount": 1,
+        "team": 2,
+        "teamName": "zombie",
+        "zombieCount": 1,
+        "survivorCount": 4,
+        "playerTagged": "EvTheSmev",
+        "validTag": false
+      },
+      {
+        "time": 4734,
+        "timeString": "1:18.90",
+        "player": "EvTheSmev",
+        "type": "invalid_pop",
+        "team": 1,
+        "teamName": "survivor",
+        "taggedBy": "map",
+        "zombieCount": 1,
+        "survivorCount": 4
+      },
+      {
+        "time": 4734,
+        "timeString": "1:18.90",
+        "player": "Some Ball 5",
+        "type": "tag",
+        "tagsCount": 1,
+        "team": 2,
+        "teamName": "zombie",
+        "zombieCount": 1,
+        "survivorCount": 4,
+        "playerTagged": "EvTheSmev",
+        "validTag": false
+      },
+      {
+        "time": 4876,
+        "timeString": "1:21.27",
+        "player": "EvTheSmev",
+        "type": "invalid_pop",
+        "team": 1,
+        "teamName": "survivor",
+        "taggedBy": "map",
+        "zombieCount": 1,
+        "survivorCount": 4
+      },
+      {
+        "time": 4876,
+        "timeString": "1:21.27",
+        "player": "Some Ball 5",
+        "type": "tag",
+        "tagsCount": 1,
+        "team": 2,
+        "teamName": "zombie",
+        "zombieCount": 1,
+        "survivorCount": 4,
+        "playerTagged": "EvTheSmev",
+        "validTag": false
+      },
+      {
+        "time": 5032,
+        "timeString": "1:23.87",
+        "player": "EvTheSmev",
+        "type": "invalid_pop",
+        "team": 1,
+        "teamName": "survivor",
+        "taggedBy": "map",
+        "zombieCount": 1,
+        "survivorCount": 4
+      },
+      {
+        "time": 5032,
+        "timeString": "1:23.87",
+        "player": "Some Ball 5",
+        "type": "tag",
+        "tagsCount": 1,
+        "team": 2,
+        "teamName": "zombie",
+        "zombieCount": 1,
+        "survivorCount": 4,
+        "playerTagged": "EvTheSmev",
+        "validTag": false
+      },
+      {
+        "time": 5118,
+        "timeString": "1:25.30",
+        "player": "EvTheSmev",
+        "type": "join_zombie",
+        "team": 2,
+        "teamName": "zombie",
+        "zombieCount": 2,
+        "survivorCount": 3
+      },
+      {
+        "time": 5428,
+        "timeString": "1:30.47",
+        "player": "UNlTY",
+        "type": "valid_pop",
+        "team": 1,
+        "teamName": "survivor",
+        "taggedBy": "Some Ball 5",
+        "zombieCount": 2,
+        "survivorCount": 3
+      },
+      {
+        "time": 5428,
+        "timeString": "1:30.47",
+        "player": "Some Ball 5",
+        "type": "tag",
+        "tagsCount": 1,
+        "team": 2,
+        "teamName": "zombie",
+        "zombieCount": 2,
+        "survivorCount": 3,
+        "playerTagged": "UNlTY",
+        "validTag": true
+      },
+      {
+        "time": 5575,
+        "timeString": "1:32.92",
+        "player": "EvTheSmev",
+        "type": "tag",
+        "tagsCount": 1,
+        "team": 2,
+        "teamName": "zombie",
+        "zombieCount": 2,
+        "survivorCount": 3,
+        "playerTagged": "UNlTY",
+        "validTag": false
+      },
+      {
+        "time": 5575,
+        "timeString": "1:32.92",
+        "player": "UNlTY",
+        "type": "invalid_pop",
+        "team": 1,
+        "teamName": "survivor",
+        "taggedBy": "map",
+        "zombieCount": 2,
+        "survivorCount": 3
+      },
+      {
+        "time": 5660,
+        "timeString": "1:34.33",
+        "player": "UNlTY",
+        "type": "join_zombie",
+        "team": 2,
+        "teamName": "zombie",
+        "zombieCount": 3,
+        "survivorCount": 2
+      },
+      {
+        "time": 7421,
+        "timeString": "2:03.68",
+        "player": "Madoka",
+        "type": "valid_pop",
+        "team": 1,
+        "teamName": "survivor",
+        "taggedBy": "UNlTY",
+        "zombieCount": 3,
+        "survivorCount": 2
+      },
+      {
+        "time": 7421,
+        "timeString": "2:03.68",
+        "player": "UNlTY",
+        "type": "tag",
+        "tagsCount": 1,
+        "team": 2,
+        "teamName": "zombie",
+        "zombieCount": 3,
+        "survivorCount": 2,
+        "playerTagged": "Madoka",
+        "validTag": true
+      },
+      {
+        "time": 7583,
+        "timeString": "2:06.38",
+        "player": "Madoka",
+        "type": "invalid_pop",
+        "team": 1,
+        "teamName": "survivor",
+        "taggedBy": "map",
+        "zombieCount": 3,
+        "survivorCount": 2
+      },
+      {
+        "time": 7583,
+        "timeString": "2:06.38",
+        "player": "UNlTY",
+        "type": "tag",
+        "tagsCount": 1,
+        "team": 2,
+        "teamName": "zombie",
+        "zombieCount": 3,
+        "survivorCount": 2,
+        "playerTagged": "Madoka",
+        "validTag": false
+      },
+      {
+        "time": 7678,
+        "timeString": "2:07.97",
+        "player": "Madoka",
+        "type": "join_zombie",
+        "team": 2,
+        "teamName": "zombie",
+        "zombieCount": 4,
+        "survivorCount": 1
+      },
+      {
+        "time": 10070,
+        "timeString": "2:47.83",
+        "player": "3",
+        "type": "valid_pop",
+        "team": 1,
+        "teamName": "survivor",
+        "taggedBy": "EvTheSmev",
+        "zombieCount": 4,
+        "survivorCount": 1
+      },
+      {
+        "time": 10070,
+        "timeString": "2:47.83",
+        "type": "match_over",
+        "message": "Last survivor popped."
+      }
+    ],
+    "players": {
+      "3": {
+        "name": "3",
+        "humanStints": [
+          {
+            "spawnTime": 0,
+            "deathTime": 10070,
+            "durationFrames": 10070,
+            "isSpawnKill": false,
+            "zombiesOnDeath": 4,
+            "killedBy": "EvTheSmev",
+            "powerupsCollected": []
+          }
+        ],
+        "zombieStints": []
+      },
+      "Madoka": {
+        "name": "Madoka",
+        "humanStints": [
+          {
+            "spawnTime": 0,
+            "deathTime": 7421,
+            "durationFrames": 7421,
+            "isSpawnKill": false,
+            "zombiesOnDeath": 3,
+            "killedBy": "UNlTY",
+            "powerupsCollected": []
+          },
+          {
+            "spawnTime": 7421,
+            "deathTime": 7583,
+            "durationFrames": 162,
+            "isSpawnKill": true,
+            "zombiesOnDeath": 3,
+            "killedBy": "map",
+            "powerupsCollected": []
+          },
+          {
+            "spawnTime": 7583,
+            "deathTime": 7678,
+            "durationFrames": 95,
+            "isSpawnKill": true,
+            "zombiesOnDeath": 3,
+            "killedBy": "map",
+            "powerupsCollected": []
+          }
+        ],
+        "zombieStints": [
+          {
+            "joinedZombieAt": 7678,
+            "leftZombieAt": 10070,
+            "validTags": 0,
+            "validPlayersTagged": [],
+            "invalidTags": 0,
+            "invalidPlayersTagged": []
+          }
+        ]
+      },
+      "EvTheSmev": {
+        "name": "EvTheSmev",
+        "humanStints": [
+          {
+            "spawnTime": 0,
+            "deathTime": 4266,
+            "durationFrames": 4266,
+            "isSpawnKill": false,
+            "zombiesOnDeath": 1,
+            "killedBy": "Some Ball 5",
+            "powerupsCollected": []
+          },
+          {
+            "spawnTime": 4266,
+            "deathTime": 4427,
+            "durationFrames": 161,
+            "isSpawnKill": true,
+            "zombiesOnDeath": 1,
+            "killedBy": "map",
+            "powerupsCollected": []
+          },
+          {
+            "spawnTime": 4427,
+            "deathTime": 4592,
+            "durationFrames": 165,
+            "isSpawnKill": true,
+            "zombiesOnDeath": 1,
+            "killedBy": "map",
+            "powerupsCollected": []
+          },
+          {
+            "spawnTime": 4592,
+            "deathTime": 4734,
+            "durationFrames": 142,
+            "isSpawnKill": true,
+            "zombiesOnDeath": 1,
+            "killedBy": "map",
+            "powerupsCollected": []
+          },
+          {
+            "spawnTime": 4734,
+            "deathTime": 4876,
+            "durationFrames": 142,
+            "isSpawnKill": true,
+            "zombiesOnDeath": 1,
+            "killedBy": "map",
+            "powerupsCollected": []
+          },
+          {
+            "spawnTime": 4876,
+            "deathTime": 5032,
+            "durationFrames": 156,
+            "isSpawnKill": true,
+            "zombiesOnDeath": 1,
+            "killedBy": "map",
+            "powerupsCollected": []
+          },
+          {
+            "spawnTime": 5032,
+            "deathTime": 5118,
+            "durationFrames": 86,
+            "isSpawnKill": true,
+            "zombiesOnDeath": 1,
+            "killedBy": "map",
+            "powerupsCollected": []
+          }
+        ],
+        "zombieStints": [
+          {
+            "joinedZombieAt": 5118,
+            "leftZombieAt": 10070,
+            "validTags": 1,
+            "validPlayersTagged": [
+              "3"
+            ],
+            "invalidTags": 1,
+            "invalidPlayersTagged": [
+              "UNlTY"
+            ]
+          }
+        ]
+      },
+      "UNlTY": {
+        "name": "UNlTY",
+        "humanStints": [
+          {
+            "spawnTime": 0,
+            "deathTime": 5428,
+            "durationFrames": 5428,
+            "isSpawnKill": false,
+            "zombiesOnDeath": 2,
+            "killedBy": "Some Ball 5",
+            "powerupsCollected": []
+          },
+          {
+            "spawnTime": 5428,
+            "deathTime": 5575,
+            "durationFrames": 147,
+            "isSpawnKill": true,
+            "zombiesOnDeath": 2,
+            "killedBy": "map",
+            "powerupsCollected": []
+          },
+          {
+            "spawnTime": 5575,
+            "deathTime": 5660,
+            "durationFrames": 85,
+            "isSpawnKill": true,
+            "zombiesOnDeath": 2,
+            "killedBy": "map",
+            "powerupsCollected": []
+          }
+        ],
+        "zombieStints": [
+          {
+            "joinedZombieAt": 5660,
+            "leftZombieAt": 10070,
+            "validTags": 1,
+            "validPlayersTagged": [
+              "Madoka"
+            ],
+            "invalidTags": 1,
+            "invalidPlayersTagged": [
+              "Madoka"
+            ]
+          }
+        ]
+      },
+      "Some Ball 5": {
+        "name": "Some Ball 5",
+        "humanStints": [],
+        "zombieStints": [
+          {
+            "joinedZombieAt": 0,
+            "leftZombieAt": 10070,
+            "validTags": 2,
+            "validPlayersTagged": [
+              "EvTheSmev",
+              "UNlTY"
+            ],
+            "invalidTags": 5,
+            "invalidPlayersTagged": [
+              "EvTheSmev",
+              "EvTheSmev",
+              "EvTheSmev",
+              "EvTheSmev",
+              "EvTheSmev"
+            ]
+          }
+        ]
+      }
+    },
+    "lastSurvivorPopTime": 10070,
+    "lastSurvivorPopTimeString": "2:47.83"
+  }
+]
