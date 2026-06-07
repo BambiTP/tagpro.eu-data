@@ -26,7 +26,7 @@ class LogReader {
     }
     readFooter() {
         let size = this.readFixed(2) << 3;
-        let free = 8 - (this.pos & 7) & 7;
+        let free = (8 - (this.pos & 7)) & 7;
         size |= free;
         let minimum = 0;
         while (free < size) {
@@ -50,12 +50,20 @@ function getBitSizes(size) {
     let grid = size - 1;
     let result = 32;
     if (!(grid & 0xFFFF0000)) { result -= 16; grid <<= 16; }
-    if (!(grid & 0xFF000000)) { result -= 8; grid <<= 8; }
-    if (!(grid & 0xF0000000)) { result -= 4; grid <<= 4; }
-    if (!(grid & 0xC0000000)) { result -= 2; grid <<= 2; }
-    if (!(grid & 0x80000000)) result--;
-    return [result, Math.floor(((1 << result) - size) / 2) + 20];
+    if (!(grid & 0xFF000000)) { result -= 8;  grid <<= 8;  }
+    if (!(grid & 0xF0000000)) { result -= 4;  grid <<= 4;  }
+    if (!(grid & 0xC0000000)) { result -= 2;  grid <<= 2;  }
+    if (!(grid & 0x80000000))   result--;
+    // PHP: ((1 << $result) - $size >> 1) + 20
+    // In PHP, '-' binds tighter than '>>', so this is (((1 << result) - size) >> 1) + 20
+    return [result, (((1 << result) - size) >> 1) + 20];
 }
+
+// --- Constants (mirrors PHP class constants) ---
+
+const Team  = { none: 0, red: 1, blue: 2 };
+const Flag  = { none: 0, opponent: 1, opponentPotato: 2, neutral: 3, neutralPotato: 4, temporary: 5 };
+const Power = { none: 0, jukeJuice: 1, rollingBomb: 2, tagPro: 4, topSpeed: 8 };
 
 // --- Internal Decoders ---
 
@@ -67,17 +75,17 @@ function decodeMap(base64Data, width) {
     while (!reader.end() || x !== 0) {
         let tile = reader.readFixed(6);
         if (tile) {
-            if (tile < 6) tile += 9;
-            else if (tile < 13) tile = (tile - 4) * 10;
-            else if (tile < 17) tile += 77;
-            else if (tile < 20) tile = (tile - 7) * 10;
-            else if (tile < 22) tile += 110;
-            else if (tile < 32) tile = (tile - 8) * 10;
-            else if (tile < 34) tile += 208;
-            else if (tile < 36) tile += 216;
-            else tile = (tile - 10) * 10;
+            if      (tile <  6) tile +=   9;              //  1- 5 ->  10- 14
+            else if (tile < 13) tile  = (tile -  4) * 10; //  6-12 ->  20- 80
+            else if (tile < 17) tile +=  77;              // 13-16 ->  90- 93
+            else if (tile < 20) tile  = (tile -  7) * 10; // 17-19 -> 100-120
+            else if (tile < 22) tile += 110;              // 20-21 -> 130-131
+            else if (tile < 32) tile  = (tile -  8) * 10; // 22-31 -> 140-230
+            else if (tile < 34) tile += 208;              // 32-33 -> 240-241
+            else if (tile < 36) tile += 216;              // 34-35 -> 250-251
+            else                tile  = (tile - 10) * 10; // 36-63 -> 260-530
         }
-        
+
         let count = 1 + reader.readFooter();
         for (let i = 0; i < count; i++) {
             currentRow.push(tile);
@@ -96,43 +104,133 @@ function decodeMap(base64Data, width) {
 function decodePlayerEvents(base64Data, startingTeam, duration) {
     const reader = new LogReader(decodeBase64ToBytes(base64Data));
     const events = [];
-    let time = 0, flag = 0, powers = 0;
+    let time = 0, flag = Flag.none, powers = Power.none;
     let team = startingTeam;
+    let prevent = false, button = false, block = false;
 
     while (!reader.end()) {
-        let newTeam = team;
-        if (reader.readBool()) { 
-            if (team) newTeam = reader.readBool() ? 0 : 3 - team;
-            else newTeam = 1 + reader.readBool();
+        // Read new team: quit | switch | join | stay
+        let newTeam;
+        if (reader.readBool()) {
+            if (team) newTeam = reader.readBool() ? Team.none : 3 - team; // quit or switch
+            else      newTeam = 1 + reader.readBool();                     // join red or blue
+        } else {
+            newTeam = team;                                                  // stay
         }
 
-        let dropPop = reader.readBool();
-        let returns = reader.readTally();
-        let tags = reader.readTally();
-        let grab = !flag && reader.readBool();
-        let captures = reader.readTally();
-        let keep = !dropPop && newTeam && (newTeam === team || !team) && (!captures || (!flag && !grab) || reader.readBool());
-        let newFlag = grab ? (keep ? 1 + reader.readFixed(2) : 5) : flag;
-        let powerups = reader.readTally();
-        
-        let powersDown = 0, powersUp = 0;
+        const dropPop  = reader.readBool();
+        const returns  = reader.readTally();
+        const tags     = reader.readTally();
+        const grab     = !flag && reader.readBool();
+        let   captures = reader.readTally();
+
+        // readBool() is conditionally consumed here — must match PHP's short-circuit exactly
+        let keep = !dropPop && newTeam && (newTeam === team || !team) &&
+                   (!captures || (!flag && !grab) || reader.readBool());
+
+        const newFlag  = grab ? (keep ? 1 + reader.readFixed(2) : Flag.temporary) : flag;
+        let   powerups = reader.readTally();
+
+        let powersDown = Power.none, powersUp = Power.none;
         for (let i = 1; i < 16; i <<= 1) {
             if (powers & i) { if (reader.readBool()) powersDown |= i; }
             else if (powerups && reader.readBool()) { powersUp |= i; powerups--; }
         }
 
-        let togglePrevent = reader.readBool();
-        let toggleButton = reader.readBool();
-        let toggleBlock = reader.readBool();
-        
+        const togglePrevent = reader.readBool();
+        const toggleButton  = reader.readBool();
+        const toggleBlock   = reader.readBool();
+
         time += 1 + reader.readFooter();
 
-        events.push({ time, team: newTeam, dropPop, returns, tags, grab, captures, newFlag, powersDown, powersUp, togglePrevent, toggleButton, toggleBlock });
+        // ---- Fire events in exactly the same order as PHP ----
 
-        team = newTeam;
-        flag = newFlag;
-        if (dropPop) flag = 0;
+        // Join: had no team, now has one
+        if (!team && newTeam) {
+            team = newTeam;
+            events.push({ type: 'join', time, team });
+        }
+
+        // Returns and tags use flag/powers state before grab
+        for (let i = 0; i < returns; i++) events.push({ type: 'return', time, flag, powers, team });
+        for (let i = 0; i < tags;    i++) events.push({ type: 'tag',    time, flag, powers, team });
+
+        // Grab: update flag before firing event
+        if (grab) {
+            flag = newFlag;
+            events.push({ type: 'grab', time, flag, powers, team });
+        }
+
+        // Captures: PHP is `if($captures--) do {...} while($captures--)` — runs exactly `captures` times
+        if (captures--) {
+            do {
+                if (keep || !flag) {
+                    events.push({ type: 'flaglessCapture', time, flag, powers, team });
+                } else {
+                    events.push({ type: 'capture', time, flag, powers, team });
+                    flag = Flag.none; // flag resets mid-tick after a real capture
+                    keep = true;
+                }
+            } while (captures--);
+        }
+
+        // Power changes: apply to `powers` before firing each event
+        for (let i = 1; i < 16; i <<= 1) {
+            if (powersDown & i) {
+                powers ^= i;
+                events.push({ type: 'powerdown', time, flag, power: i, powers, team });
+            } else if (powersUp & i) {
+                powers |= i;
+                events.push({ type: 'powerup', time, flag, power: i, powers, team });
+            }
+        }
+
+        // Remaining tally (powerups claimed that matched no distinct bit)
+        for (let i = 0; i < powerups; i++) events.push({ type: 'duplicatePowerup', time, flag, powers, team });
+
+        // Prevent toggle
+        if (togglePrevent) {
+            if (prevent) { events.push({ type: 'stopPrevent',  time, flag, powers, team }); prevent = false; }
+            else          { events.push({ type: 'startPrevent', time, flag, powers, team }); prevent = true;  }
+        }
+
+        // Button toggle
+        if (toggleButton) {
+            if (button) { events.push({ type: 'stopButton',  time, flag, powers, team }); button = false; }
+            else         { events.push({ type: 'startButton', time, flag, powers, team }); button = true;  }
+        }
+
+        // Block toggle
+        if (toggleBlock) {
+            if (block) { events.push({ type: 'stopBlock',  time, flag, powers, team }); block = false; }
+            else        { events.push({ type: 'startBlock', time, flag, powers, team }); block = true;  }
+        }
+
+        // Drop or pop: flag resets mid-tick here too
+        if (dropPop) {
+            if (flag) {
+                events.push({ type: 'drop', time, flag, powers, team });
+                flag = Flag.none;
+            } else {
+                events.push({ type: 'pop', time, powers, team });
+            }
+        }
+
+        // Quit or switch: flag already reflects any drop above
+        if (newTeam !== team) {
+            if (!newTeam) {
+                events.push({ type: 'quit', time, flag, powers, team });
+                powers = Power.none; // powers reset only on quit, not switch
+            } else {
+                // switchEvent passes newTeam, not oldTeam, matching PHP signature
+                events.push({ type: 'switch', time, flag, powers, team: newTeam });
+            }
+            flag = Flag.none;
+            team = newTeam;
+        }
     }
+
+    events.push({ type: 'end', time: duration, flag, powers, team });
     return events;
 }
 
@@ -146,7 +244,7 @@ function decodeSplats(base64Data, mapWidth, mapHeight) {
     while (!reader.end()) {
         let count = reader.readTally();
         if (count > 0) {
-            let currentSplats = [];
+            const currentSplats = [];
             while (count--) {
                 currentSplats.push({
                     x: reader.readFixed(xBits[0]) - xBits[1],
@@ -244,6 +342,10 @@ function processSingleMatch(matchData, mapsData, options) {
 // --- Exported API ---
 
 module.exports = {
+    Team,
+    Flag,
+    Power,
+
     /**
      * Generator: Yields decoded bulk matches one at a time.
      * @param {string} bulkFilePath - Path to bulk matches JSON.
@@ -253,7 +355,7 @@ module.exports = {
      */
     decodeBulkMatches: function* (bulkFilePath, mapFilePath, options, idArray = 'all') {
         const matchesData = JSON.parse(fs.readFileSync(bulkFilePath, 'utf8'));
-        
+
         let mapsData = null;
         if (mapFilePath) {
             try {
@@ -275,8 +377,7 @@ module.exports = {
 
         for (const matchId of matchIds) {
             const matchData = matchesData[matchId];
-            matchData.id = matchId; 
-            
+            matchData.id = matchId;
             yield processSingleMatch(matchData, mapsData, options);
         }
     },
