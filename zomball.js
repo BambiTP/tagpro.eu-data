@@ -1,8 +1,6 @@
 const decoder = require('./decoder.js');
 
 // --- CORE ZOMBALL PROCESSOR ---
-// This function takes a raw match object from the decoder and converts it 
-// into our enriched data structure.
 function processZomballMatch(match) {
     const timeline = [];
     const playersData = {};
@@ -29,7 +27,9 @@ function processZomballMatch(match) {
             currentStintStart: 0,
             powerups: new Set(),
             validTagsThisStint: 0,
-            invalidTagsThisStint: 0
+            validPlayersTagged: [],
+            invalidTagsThisStint: 0,
+            invalidPlayersTagged: []
         };
     }
 
@@ -40,18 +40,29 @@ function processZomballMatch(match) {
             allEvents.push({ ...e, playerName: p.name });
         }
     }
+    
     allEvents.sort((a, b) => a.time - b.time);
+
+    // Lookahead Map for zombie tags
+    const zombieTagsByFrame = {};
+    // Per-tagger queue of resolved {playerTagged, validTag} — filled during pop processing, consumed post-loop
+    const resolvedTagsByTagger = {};
+    for (const e of allEvents) {
+        if (e.type === 'tag') {
+            const roundedTime = Math.round(e.time);
+            if (!zombieTagsByFrame[roundedTime]) zombieTagsByFrame[roundedTime] = [];
+            zombieTagsByFrame[roundedTime].push(e.playerName);
+        }
+    }
 
     let zombieCount = Object.values(playerStates).filter(s => s.team === 2).length;
     let survivorCount = Object.values(playerStates).filter(s => s.team === 1).length;
     
-    // Initialize our pre-infection tracker with the starting team counts
     maxZombiesBeforeFirstValidPop = zombieCount;
 
     timeline.push({ time: 0, timeString: "0:00.00", zombieCount, survivorCount, type: "match_start" });
 
-    // Helper to close and save a player's stint
-    const closeStint = (pName, team, endTime, forceSpawnKill = null) => {
+    const closeStint = (pName, team, endTime, forceSpawnKill = null, killedBy = "map") => {
         const pState = playerStates[pName];
         const duration = endTime - pState.currentStintStart;
         
@@ -63,6 +74,7 @@ function processZomballMatch(match) {
                 durationFrames: duration,
                 isSpawnKill: isSpawnKill,
                 zombiesOnDeath: zombieCount,
+                killedBy: killedBy,
                 powerupsCollected: Array.from(pState.powerups)
             });
         } else if (team === 2 && duration > 0) {
@@ -70,7 +82,9 @@ function processZomballMatch(match) {
                 joinedZombieAt: pState.currentStintStart,
                 leftZombieAt: endTime,
                 validTags: pState.validTagsThisStint,
-                invalidTags: pState.invalidTagsThisStint
+                validPlayersTagged: [...pState.validPlayersTagged],
+                invalidTags: pState.invalidTagsThisStint,
+                invalidPlayersTagged: [...pState.invalidPlayersTagged]
             });
         }
     };
@@ -82,9 +96,9 @@ function processZomballMatch(match) {
         const timeStr = toMMSScc(e.time);
 
         // -- Handle Team Changes --
-        if (e.team !== undefined && e.team !== pState.team) {
+        if (e.type === 'join' || e.type === 'switch' || e.type === 'quit') {
             const oldTeam = pState.team;
-            const newTeam = e.team;
+            const newTeam = e.type === 'quit' ? 0 : e.team;
 
             closeStint(pName, oldTeam, e.time);
 
@@ -93,7 +107,6 @@ function processZomballMatch(match) {
             if (newTeam === 1) survivorCount++;
             if (newTeam === 2) zombieCount++;
             
-            // If we haven't seen a real infection yet, keep tracking the highest number of zombies
             if (!hasSeenValidPop) {
                 maxZombiesBeforeFirstValidPop = Math.max(maxZombiesBeforeFirstValidPop, zombieCount);
             }
@@ -102,7 +115,9 @@ function processZomballMatch(match) {
             pState.currentStintStart = e.time;
             pState.powerups.clear();
             pState.validTagsThisStint = 0;
+            pState.validPlayersTagged = [];
             pState.invalidTagsThisStint = 0;
+            pState.invalidPlayersTagged = [];
 
             timeline.push({
                 time: e.time, timeString: timeStr, player: pName,
@@ -113,21 +128,90 @@ function processZomballMatch(match) {
             });
         }
 
+        // -- Handle Tags --
+        if (e.type === 'tag') {
+            timeline.push({
+                time: e.time,
+                timeString: timeStr,
+                player: pName,
+                type: 'tag',
+                tagsCount: 1,
+                team: pState.team,
+                teamName: pState.team === 1 ? 'survivor' : pState.team === 2 ? 'zombie' : 'spectator',
+                zombieCount,
+                survivorCount
+            });
+        }
+
         // -- Handle All Pops --
-        if (e.dropPop) {
+        if (e.type === 'pop') {
             const duration = e.time - pState.currentStintStart;
             let typeStr = 'pop'; 
+            let killerName = "map"; 
             
             if (pState.team === 1) {
-                // Rule: If under 5 seconds OR there are 0 zombies, it's an invalid pop
                 const isSpawnKill = duration < 300 || zombieCount === 0; 
                 typeStr = isSpawnKill ? 'invalid_pop' : 'valid_pop';
                 
-                if (typeStr === 'valid_pop') {
-                    hasSeenValidPop = true;
+                if (typeStr === 'valid_pop') hasSeenValidPop = true;
+
+                // Always search for a tag event to "consume" it from the timeline, 
+                // preventing phantom stats from polluting later kills.
+                let foundTagger = "map";
+                const searchWindow = 300; 
+                let closestDist = Infinity;
+                let bestFrame = -1;
+
+                for (const frame in zombieTagsByFrame) {
+                    const diff = Math.abs(parseInt(frame) - e.time);
+                    if (diff <= searchWindow && diff < closestDist) {
+                        const hasValidKiller = zombieTagsByFrame[frame].some(name => 
+                            name !== pName && playerStates[name] && playerStates[name].team === 2
+                        );
+                        if (hasValidKiller) {
+                            closestDist = diff;
+                            bestFrame = frame;
+                        }
+                    }
                 }
                 
-                closeStint(pName, 1, e.time, isSpawnKill);
+                // If we found a raw tag in the timeframe, remove it from the lookahead array
+                if (bestFrame !== -1) {
+                    const idx = zombieTagsByFrame[bestFrame].findIndex(name => 
+                        name !== pName && playerStates[name] && playerStates[name].team === 2
+                    );
+                    if (idx !== -1) {
+                        foundTagger = zombieTagsByFrame[bestFrame].splice(idx, 1)[0];
+                    }
+                }
+
+                // If it was a valid pop, credit the tagger. Otherwise, throw it away.
+                if (typeStr === 'valid_pop') {
+                    if (foundTagger !== "map") {
+                        killerName = foundTagger;
+                        if (!resolvedTagsByTagger[killerName]) resolvedTagsByTagger[killerName] = [];
+                        resolvedTagsByTagger[killerName].push({ playerTagged: pName, validTag: true });
+                    } else {
+                        // Fallback: If no tag was found, but exactly one zombie is alive, credit them
+                        // No resolution recorded — the fallback has no corresponding tag event to annotate
+                        const currentZombies = Object.keys(playerStates).filter(name => playerStates[name].team === 2);
+                        if (currentZombies.length === 1) {
+                            killerName = currentZombies[0];
+                        }
+                    }
+
+                    if (killerName !== "map" && playerStates[killerName]) {
+                        playerStates[killerName].validPlayersTagged.push(pName);
+                        playerStates[killerName].validTagsThisStint++;
+                    }
+                } else if (foundTagger !== "map" && playerStates[foundTagger]) {
+                    playerStates[foundTagger].invalidTagsThisStint++;
+                    playerStates[foundTagger].invalidPlayersTagged.push(pName);
+                    if (!resolvedTagsByTagger[foundTagger]) resolvedTagsByTagger[foundTagger] = [];
+                    resolvedTagsByTagger[foundTagger].push({ playerTagged: pName, validTag: false });
+                }
+                
+                closeStint(pName, 1, e.time, isSpawnKill, killerName);
                 pState.currentStintStart = e.time; 
             }
 
@@ -138,11 +222,11 @@ function processZomballMatch(match) {
                 type: typeStr,
                 team: pState.team,
                 teamName: pState.team === 1 ? 'survivor' : pState.team === 2 ? 'zombie' : 'spectator',
+                taggedBy: killerName, 
                 zombieCount, 
                 survivorCount
             });
 
-            // Rule: Stop processing if this was the last survivor taking a valid pop
             if (pState.team === 1 && typeStr === 'valid_pop' && survivorCount === 1) {
                 lastSurvivorPopTime = e.time;
                 lastSurvivorPopTimeString = timeStr;
@@ -153,37 +237,31 @@ function processZomballMatch(match) {
                     type: "match_over",
                     message: "Last survivor popped."
                 });
-                
-                break; // Exit the event loop entirely
-            }
-        }
-
-        // -- Handle Zombie Tags --
-        if (e.tags > 0 && pState.team === 2) {
-            const simultaneousPops = timeline.filter(t => t.time === e.time && t.type === 'invalid_pop');
-            const wasSpawnKillTag = simultaneousPops.length > 0;
-
-            if (wasSpawnKillTag) {
-                pState.invalidTagsThisStint += e.tags;
-            } else {
-                pState.validTagsThisStint += e.tags;
+                break;
             }
         }
 
         // -- Handle Powerups --
-        for (const bit of [1, 2, 4, 8]) {
-            if (e.powersUp & bit) pState.powerups.add({ 1: 'juke juice', 2: 'speed', 4: 'grip', 8: 'bomb' }[bit] || `power ${bit}`);
+        if (e.type === 'powerup') {
+            pState.powerups.add({ 1: 'juke juice', 2: 'speed', 4: 'grip', 8: 'bomb' }[e.power] || `power ${e.power}`);
         }
     }
 
-    // 4. Wrap up any ongoing stints at the end of the match
-    // If the game ended early due to the last survivor dying, use that time. Otherwise, use match duration.
     const matchEndTime = lastSurvivorPopTime !== null 
         ? lastSurvivorPopTime 
         : (match.duration || (allEvents.length ? allEvents[allEvents.length - 1].time : 0));
         
     for (const pName of Object.keys(playerStates)) {
         closeStint(pName, playerStates[pName].team, matchEndTime);
+    }
+
+    for (const entry of timeline) {
+        if (entry.type === 'tag') {
+            const queue = resolvedTagsByTagger[entry.player];
+            const resolution = queue && queue.shift();
+            entry.playerTagged = resolution ? resolution.playerTagged : null;
+            entry.validTag = resolution ? resolution.validTag : false;
+        }
     }
 
     return { 
@@ -196,5 +274,4 @@ function processZomballMatch(match) {
     };
 }
 
-
-module.exports = {processZomballMatch};
+module.exports = { processZomballMatch };
